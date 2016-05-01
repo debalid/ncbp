@@ -1,25 +1,29 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%
-    String reason = (String) request.getAttribute("reason");
-    String reasonExplicit = (String) request.getAttribute("reasonExplicit");
-    if (reason == null) reason = "Неизвестная ошибка";
-    request.removeAttribute("reason");
-    request.removeAttribute("reasonExplicit");
-%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-    <title>Error - <%= reason %></title>
+    <title>Error - ${requestScope.reason}
+    </title>
     <!-- Bootstrap css cdn -->
     <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
           integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
-          crossorigin="anonymous" />
+          crossorigin="anonymous"/>
 </head>
 <body>
-<h2> <%= reason %> </h2>
-<% if (reasonExplicit != null) { %>
-    <h5> <%= reasonExplicit %> </h5>
-<% } %>
+<h2>
+    <c:choose>
+        <c:when test="${!empty requestScope.reason}">
+            ${requestScope.reason}
+        </c:when>
+        <c:otherwise>
+            Неизвестная ошибка
+        </c:otherwise>
+    </c:choose>
+</h2>
+<c:if test="${!empty requestScope.reasonExplicit}">
+    <h5>${requestScope.reasonExplicit}</h5>
+</c:if>
 
 <!-- Bootstrap js cdn -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"

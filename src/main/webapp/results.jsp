@@ -1,12 +1,5 @@
-<%@ page import="com.debalid.ncbp.entity.Order" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.Collections" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%
-    List<Order> orders = (List<Order>) request.getAttribute("orders");
-    if (orders == null) orders = Collections.emptyList();
-    request.removeAttribute("orders");
-%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
 <head>
     <title>Title</title>
@@ -36,20 +29,26 @@
         </tr>
         </thead>
         <tbody>
-        <% for (Order order : orders) { %>
-        <tr>
-            <td><%= order.getNumber() %>
-            </td>
-            <td><%=order.getDate()%>
-            </td>
-            <td><i class="fa fa-rub"></i> <%=order.getPriceTotal()%>
-            </td>
-            <td><%= order.getClient().getTitle() %>
-            </td>
-            <td><%=order.getClient().getPhone()%>
-            </td>
-        </tr>
-        <% } %>
+        <c:forEach var="order" items="${requestScope.orders}">
+            <tr>
+                <td>
+                        ${order.number}
+                </td>
+                <td>
+                        ${order.date}
+                </td>
+                <td>
+                    <i class="fa fa-rub"></i>
+                        ${order.priceTotal}
+                </td>
+                <td>
+                        ${order.client.title}
+                </td>
+                <td>
+                        ${order.client.phone}
+                </td>
+            </tr>
+        </c:forEach>
         </tbody>
     </table>
 
