@@ -13,20 +13,24 @@
 <body>
 <form>
     <c:choose>
-        <c:when test="${!empty requestScope.order.number}">
-            <input type="number" name="number" placeholder="Номер заказа" value="${requestScope.order.number}"
+        <c:when test="${!empty requestScope.orderAndAvailableClients.first.number}">
+            <input type="number" name="number" placeholder="Номер заказа"
+                   value="${requestScope.orderAndAvailableClients.first.number}"
                    disabled/>
         </c:when>
         <c:otherwise>
-            <input type="number" name="number" placeholder="Номер заказа" value="${requestScope.order.number}"/>
+            <input type="number" name="number" placeholder="Номер заказа"
+                   value="${requestScope.orderAndAvailableClients.first.number}"/>
         </c:otherwise>
     </c:choose>
-    <input type="date" name="date" placeholder="Дата" value="${requestScope.order.date}"/>
-    <input type="number" name="total" placeholder="Сумма заказа" value="${requestScope.order.priceTotal}"/>
+    <input type="date" name="date" placeholder="Дата"
+           value="${requestScope.orderAndAvailableClients.first.date}"/>
+    <input type="number" name="total" placeholder="Сумма заказа"
+           value="${requestScope.orderAndAvailableClients.first.priceTotal}"/>
     <ul>
-        <c:forEach items="${requestScope.availableClients}" var="client">
+        <c:forEach items="${requestScope.orderAndAvailableClients.second}" var="client">
             <c:choose>
-                <c:when test="${requestScope.order.client.title = client.title}}">
+                <c:when test="${requestScope.orderAndAvailableClients.first.client.id eq client.id}}">
                     <li><input type="radio" value="${client.title}" checked/></li>
                 </c:when>
                 <c:otherwise>

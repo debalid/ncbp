@@ -12,7 +12,7 @@ public class ErrorResult extends ModelViewResult<ErrorResult.Error> {
      * @return ErrorResult - simple model and view representation.
      */
     public static ErrorResult of(String reason, String explicit) {
-        return new ErrorResult("error", new ErrorResult.Error(reason, explicit, 500), "error.jsp");
+        return new ErrorResult("error", new ErrorResult.Error(reason, explicit, 500), "/error.jsp");
     }
 
     /**
@@ -23,7 +23,7 @@ public class ErrorResult extends ModelViewResult<ErrorResult.Error> {
      * @return ErrorResult - simple model and view representation.
      */
     public static ErrorResult of(String reason, String explicit, int code) {
-        return new ErrorResult("error", new ErrorResult.Error(reason, explicit, code), "error.jsp");
+        return new ErrorResult("error", new ErrorResult.Error(reason, explicit, code), "/error.jsp");
     }
 
     protected ErrorResult(String modelName, ErrorResult.Error model, String viewName) {

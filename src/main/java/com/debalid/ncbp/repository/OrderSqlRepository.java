@@ -10,7 +10,6 @@ import java.util.List;
  * Created by debalid on 20.04.2016.
  */
 public interface OrderSqlRepository extends SqlRepository<Order,Long> {
-    List<Order> findAll() throws SQLException;
     List<Order> findByNumber(String numberChunk) throws SQLException;
     List<Order> findByClientTitle(String clientTitleChunk) throws SQLException;
 

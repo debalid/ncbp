@@ -1,6 +1,7 @@
 package com.debalid.ncbp.repository;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,4 +14,6 @@ public interface SqlRepository<TEntity, Identifier> {
     TEntity delete(TEntity some) throws SQLException;
 
     Optional<TEntity> find(Identifier id) throws SQLException;
+
+    List<TEntity> findAll() throws SQLException;
 }

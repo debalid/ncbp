@@ -15,13 +15,15 @@ import java.util.Map;
  * Created by debalid on 20.04.2016.
  */
 public class ControllerDispatcher extends HttpServlet {
+    // uri pattern: /controller/action/?query
+    private static final String URI_REGEXP = "/[A-z]*(/|/[A-z]*/?)?(\\?.*)?";
+    // default (root `/`) controller is `orders`
+    private static final String DEFAULT_CONTROLLER = OrdersController.CONTROLLER_URI;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        ModelViewResult result = null;
-
-        //Try to resolve specified request.
-        ResolvedRequest resolved = resolveRequest(req);
+        //Try to resolve specified GET request.
+        ResolvedRequest resolved = resolveRequest(ResolvedRequest.HTTP_VERB.GET, req);
         if (resolved == null) { //not resolved
             finishRequest(req, resp,
                     ErrorResult.of("Cannot resolve GET request",
@@ -31,7 +33,7 @@ public class ControllerDispatcher extends HttpServlet {
         }
 
         // Try to dispatch specified request.
-        result = dispatchGet(req, resp, resolved);
+        ModelViewResult result = dispatchGet(req, resp, resolved);
         if (result == null) {
             finishRequest(req, resp,
                     ErrorResult.of("Cannot dispatch GET request",
@@ -44,20 +46,20 @@ public class ControllerDispatcher extends HttpServlet {
         finishRequest(req, resp, result);
     }
 
-    private ResolvedRequest resolveRequest(HttpServletRequest req) {
+    private ResolvedRequest resolveRequest(ResolvedRequest.HTTP_VERB verb, HttpServletRequest req) {
         String uri = req.getServletPath();
 
         // pattern: /controller/action/?query
-        if (!uri.matches("/[A-z]*(/|/[A-z]*/?)?(\\?.*)?")) {
+        if (!uri.matches(URI_REGEXP)) {
             return null;
         }
 
         String[] parts = uri.split("/");
-        String controller = parts.length > 0 ? parts[1] : "orders"; //`orders` is default controller
+        String controller = parts.length > 0 ? parts[1] : DEFAULT_CONTROLLER; //`orders` is default controller
         String action = parts.length > 2 ? parts[2] : null;
         Map<String, String[]> params = req.getParameterMap();
 
-        return new ResolvedRequest(ResolvedRequest.HTTP_VERB.GET, controller, action, params);
+        return new ResolvedRequest(verb, controller, action, params);
     }
 
     private void finishRequest(HttpServletRequest req, HttpServletResponse resp, ModelViewResult mv)
@@ -99,8 +101,8 @@ public class ControllerDispatcher extends HttpServlet {
         switch (resolved.action != null ? resolved.action : "") {
             case OrdersController.ACTION_GET_ALL_BY_FILTER:
                 return ordersController.getAllByFilter(resolved.params);
-            case OrdersController.ACTION_EDIT:
-                return ordersController.edit(resolved.params);
+            case OrdersController.ACTION_GET_EDIT:
+                return ordersController.getEdit(resolved.params);
             default:
                 return ordersController.index(resolved.params);
         }
