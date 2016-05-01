@@ -10,7 +10,7 @@
     </listener>
     <servlet>
         <servlet-name>Dispatcher</servlet-name>
-        <servlet-class>com.debalid.ncbp.OrdersDispatcher</servlet-class>
+        <servlet-class>com.debalid.ncbp.ControllerDispatcher</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>Dispatcher</servlet-name>

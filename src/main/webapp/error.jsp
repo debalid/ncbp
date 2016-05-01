@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-    <title>Error - ${requestScope.reason}
+    <title>Error - ${requestScope.error.reason}
     </title>
     <!-- Bootstrap css cdn -->
     <link rel="stylesheet"
@@ -11,19 +11,21 @@
           crossorigin="anonymous"/>
 </head>
 <body>
-<h2>
-    <c:choose>
-        <c:when test="${!empty requestScope.reason}">
-            ${requestScope.reason}
-        </c:when>
-        <c:otherwise>
-            Неизвестная ошибка
-        </c:otherwise>
-    </c:choose>
-</h2>
-<c:if test="${!empty requestScope.reasonExplicit}">
-    <h5>${requestScope.reasonExplicit}</h5>
-</c:if>
+<div class="container">
+    <h2>
+        <c:choose>
+            <c:when test="${!empty requestScope.error.reason}">
+                ${requestScope.error.reason}
+            </c:when>
+            <c:otherwise>
+                Неизвестная ошибка
+            </c:otherwise>
+        </c:choose>
+    </h2>
+    <c:if test="${!empty requestScope.error.explicit}">
+        <h5>${requestScope.error.explicit}</h5>
+    </c:if>
+</div>
 
 <!-- Bootstrap js cdn -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
