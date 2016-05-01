@@ -66,8 +66,46 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
         }
     }
 
-    public void save(Order some) {
-        throw new UnsupportedOperationException();
+    public void save(Order some) throws SQLException {
+        try (
+                Connection connection = this.getDataSource().getConnection();
+                PreparedStatement selectStatement = connection.prepareStatement(
+                        "SELECT count(*)" +
+                                "FROM orders " +
+                                "WHERE order_number = ?"
+                );
+                PreparedStatement insertStatement = connection.prepareStatement(
+                        "INSERT INTO orders(date, priceTotal, client_id) " +
+                                "VALUES (?, ?, ?)"
+                );
+                PreparedStatement updateStatement = connection.prepareStatement(
+                        "UPDATE orders " +
+                                "SET date = ? " +
+                                ", priceTotal = ? " +
+                                ", client_id = ? " +
+                                "WHERE order_number = ?"
+                );
+        ) {
+            selectStatement.setLong(1, some.getNumber());
+            selectStatement.execute();
+
+            ResultSet rs = selectStatement.getResultSet();
+            rs.next();
+            int founded = rs.getInt(1);
+            if (founded == 0) {
+                //insertStatement.setLong(1, some.getNumber()); TODO: handle
+                insertStatement.setDate(1, new java.sql.Date(some.getDate().getTime()));
+                insertStatement.setInt(2, some.getPriceTotal());
+                insertStatement.setInt(3, some.getClient().getId());
+                insertStatement.execute();
+            } else {
+                updateStatement.setDate(1, new java.sql.Date(some.getDate().getTime()));
+                updateStatement.setInt(2, some.getPriceTotal());
+                updateStatement.setInt(3, some.getClient().getId());
+                updateStatement.setLong(4, some.getNumber());
+                updateStatement.execute();
+            }
+        }
     }
 
     public Order delete(Order some) {

@@ -12,6 +12,9 @@
 </head>
 <body>
 <div class="container">
+    <div class="page-header">
+        <h1>${requestScope.error.code}</h1>
+    </div>
     <h2>
         <c:choose>
             <c:when test="${!empty requestScope.error.reason}">

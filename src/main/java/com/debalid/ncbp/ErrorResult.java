@@ -1,5 +1,7 @@
 package com.debalid.ncbp;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * Represents custom error view and model.
  * Created by debalid on 01.05.2016.
@@ -12,7 +14,8 @@ public class ErrorResult extends ModelViewResult<ErrorResult.Error> {
      * @return ErrorResult - simple model and view representation.
      */
     public static ErrorResult of(String reason, String explicit) {
-        return new ErrorResult("error", new ErrorResult.Error(reason, explicit, 500), "/error.jsp");
+        return new ErrorResult("error",
+                new ErrorResult.Error(reason, explicit, HttpServletResponse.SC_INTERNAL_SERVER_ERROR), "/error.jsp");
     }
 
     /**

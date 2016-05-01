@@ -8,10 +8,16 @@ import com.debalid.ncbp.repository.ClientSqlRepository;
 import com.debalid.ncbp.repository.OrderSqlRepository;
 import com.debalid.ncbp.repository.impl.JDBCClientSqlRepository;
 import com.debalid.ncbp.repository.impl.JDBCOrderSqlRepository;
+import com.debalid.ncbp.util.HttpVerb;
 import com.debalid.ncbp.util.Tuple;
 
 import javax.naming.NamingException;
+import javax.servlet.http.HttpServletResponse;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,8 +28,9 @@ import java.util.Optional;
  */
 public class OrdersController {
     public static final String CONTROLLER_URI = "orders"; // GET: `/orders`
-    public static final String ACTION_GET_ALL_BY_FILTER = "getAllByFilter"; // GET: `/orders/getAllByFilter`
-    public static final String ACTION_GET_EDIT = "edit"; // GET: `/order/edit`
+    public static final String ACTION_ALL_BY_FILTER = "getAllByFilter"; // GET: `/orders/getAllByFilter`
+    public static final String ACTION_EDIT = "edit"; // GET: `/order/edit`
+    public static final String ACTION_SAVE = "save"; // POST: `/order/save`
 
     private OrderSqlRepository ordersRepo;
     private ClientSqlRepository clientsRepo;
@@ -35,12 +42,15 @@ public class OrdersController {
     }
 
     // GET: / or /orders/
-    public ModelViewResult index(Map<String, String[]> params) {
-        return getAllByFilter(params);
+    public ModelViewResult index(HttpVerb verb, Map<String, String[]> params) {
+        return allByFilter(verb, params);
     }
 
     // GET: /orders/getAllByFilter?number=1234&clientTitle=tma
-    public ModelViewResult getAllByFilter(Map<String, String[]> params) {
+    public ModelViewResult allByFilter(HttpVerb verb, Map<String, String[]> params) {
+        if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
+                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+
         String[] numberParams = params.get("number");
         String[] clientTitleParams = params.get("clientTitle");
 
@@ -60,7 +70,10 @@ public class OrdersController {
     }
 
     // GET: /orders/edit/?number=1234
-    public ModelViewResult getEdit(Map<String, String[]> params) {
+    public ModelViewResult edit(HttpVerb verb, Map<String, String[]> params) {
+        if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
+                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+
         String[] numberParams = params.get("number");
 
         Long number = null;
@@ -70,7 +83,8 @@ public class OrdersController {
             Optional<Order> order = ordersRepo.find(number);
 
             if (!order.isPresent())
-                return ErrorResult.of("Cannot find order :(", "Cannot find order with number " + number, 404);
+                return ErrorResult.of("Cannot find order :(", "Cannot find order with number " + number,
+                        HttpServletResponse.SC_NOT_FOUND);
 
             List<Client> availableClients = clientsRepo.findAll();
 
@@ -82,6 +96,76 @@ public class OrdersController {
 
         } catch (SQLException e) {
             return ErrorResult.of("SQL error :(", e.getMessage());
+        }
+    }
+
+    // POST: /orders/save/
+    public ModelViewResult save(HttpVerb verb, Map<String, String[]> params) {
+        if (!verb.equals(HttpVerb.POST)) return ErrorResult.of("Method not supported", null,
+                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+
+        OrderParams op = extractOrderParams(params);
+
+        if (op.date == null) return ErrorResult.of("Cannot extract date :(", "Cannot extract date from request params.");
+        if (op.priceTotal < 0) return ErrorResult.of("Cannot extract price :(", "Cannot extract price from request params.");
+        if (op.clientId < 0) return ErrorResult.of("Cannot extract client :(", "Cannot extract client if from request params.");
+
+        try {
+            Optional<Client> client = clientsRepo.find(op.clientId);
+            if (!client.isPresent())
+                return ErrorResult.of("Cannot find client :(", "Cannot find client with id " + op.clientId + ".");
+
+            Order order = new Order();
+            order.setNumber(op.number);
+            order.setPriceTotal(op.priceTotal);
+            order.setDate(op.date);
+            order.setClient(client.get());
+
+            ordersRepo.save(order);
+        } catch (SQLException e) {
+            return ErrorResult.of("SQL error :(", e.getMessage());
+        }
+
+        return null;
+    }
+
+    private OrderParams extractOrderParams(Map<String, String[]> params) {
+        String[] numberParams = params.get("number");
+        String[] clientIdParams = params.get("clientId");
+        String[] dateParams = params.get("date");
+        String[] priceTotalParams = params.get("total");
+
+        Long number = null;
+        if (numberParams != null && numberParams.length > 0) number = Long.parseLong(numberParams[0]);
+
+        Integer clientId = null;
+        if (clientIdParams != null && clientIdParams.length > 0) clientId = Integer.parseInt(clientIdParams[0]);
+
+        Date date = null;
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        if (dateParams != null && dateParams.length > 0) try {
+            date = df.parse(dateParams[0]);
+        } catch (ParseException e) {
+            date = null;
+        }
+
+        Integer priceTotal = null;
+        if (priceTotalParams != null && priceTotalParams.length > 0) priceTotal = Integer.parseInt(priceTotalParams[0]);
+
+        return new OrderParams(number, clientId != null ? clientId : -1, date, priceTotal != null ? priceTotal : -1);
+    }
+
+    private class OrderParams {
+        public final Long number;
+        public final int clientId;
+        public final Date date;
+        public final int priceTotal;
+
+        private OrderParams(Long number, int clientId, Date date, int priceTotal) {
+            this.number = number;
+            this.clientId = clientId;
+            this.date = date;
+            this.priceTotal = priceTotal;
         }
     }
 }

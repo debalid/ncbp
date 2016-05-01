@@ -1,6 +1,7 @@
 package com.debalid.ncbp;
 
 import com.debalid.ncbp.controllers.OrdersController;
+import com.debalid.ncbp.util.HttpVerb;
 
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
@@ -22,23 +23,33 @@ public class ControllerDispatcher extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        processRequest(HttpVerb.GET, req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        processRequest(HttpVerb.POST, req, resp);
+    }
+
+    private void processRequest(HttpVerb verb, HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         //Try to resolve specified GET request.
-        ResolvedRequest resolved = resolveRequest(ResolvedRequest.HTTP_VERB.GET, req);
+        ResolvedRequest resolved = resolveRequest(verb, req);
         if (resolved == null) { //not resolved
             finishRequest(req, resp,
                     ErrorResult.of("Cannot resolve GET request",
-                    "Cannot resolve specified uri `" + req.getServletPath() + "`.",
-                    404));
+                            "Cannot resolve specified uri `" + req.getServletPath() + "`.",
+                            404));
             return;
         }
 
         // Try to dispatch specified request.
-        ModelViewResult result = dispatchGet(req, resp, resolved);
+        ModelViewResult result = dispatchController(req, resp, resolved);
         if (result == null) {
             finishRequest(req, resp,
-                    ErrorResult.of("Cannot dispatch GET request",
-                    "Cannot find controller `" + resolved.controller + "` and action `" + resolved.action + "`.",
-                    500));
+                    ErrorResult.of("Cannot dispatch " + resolved.verb.toString().toUpperCase() + " request",
+                            "Cannot find controller `" + resolved.controller + "` and action `" + resolved.action + "`.",
+                            500));
             return;
         }
 
@@ -46,7 +57,7 @@ public class ControllerDispatcher extends HttpServlet {
         finishRequest(req, resp, result);
     }
 
-    private ResolvedRequest resolveRequest(ResolvedRequest.HTTP_VERB verb, HttpServletRequest req) {
+    private ResolvedRequest resolveRequest(HttpVerb verb, HttpServletRequest req) {
         String uri = req.getServletPath();
 
         // pattern: /controller/action/?query
@@ -76,35 +87,41 @@ public class ControllerDispatcher extends HttpServlet {
     }
 
     // Definitely should be some reflection magic here! :)
-    private ModelViewResult dispatchGet(HttpServletRequest req, HttpServletResponse resp, ResolvedRequest resolved)
+    private ModelViewResult dispatchController(HttpServletRequest req, HttpServletResponse resp, ResolvedRequest resolved)
             throws ServletException, IOException {
 
         ModelViewResult result = null;
 
-        switch (resolved.controller) {
+        switch (resolved.controller != null ? resolved.controller : DEFAULT_CONTROLLER) {
             case OrdersController.CONTROLLER_URI:
+                result = dispatchOrders(resolved);
+                break;
             default:
-                result = dispatchGetOrders(resolved);
+                result = null;
         }
 
         return result;
     }
 
     // Should go to reflection-based implementation
-    private ModelViewResult dispatchGetOrders(ResolvedRequest resolved) {
+    private ModelViewResult dispatchOrders(ResolvedRequest resolved) {
         OrdersController ordersController = null;
         try {
             ordersController = new OrdersController();
         } catch (NamingException e) {
             return ErrorResult.of("Cannot establish JNDI resource :(", e.getMessage());
         }
-        switch (resolved.action != null ? resolved.action : "") {
-            case OrdersController.ACTION_GET_ALL_BY_FILTER:
-                return ordersController.getAllByFilter(resolved.params);
-            case OrdersController.ACTION_GET_EDIT:
-                return ordersController.getEdit(resolved.params);
+        switch (resolved.action != null ? resolved.action : "/") {
+            case "/":
+                return ordersController.index(resolved.verb, resolved.params);
+            case OrdersController.ACTION_ALL_BY_FILTER:
+                return ordersController.allByFilter(resolved.verb, resolved.params);
+            case OrdersController.ACTION_EDIT:
+                return ordersController.edit(resolved.verb, resolved.params);
+            case OrdersController.ACTION_SAVE:
+                return ordersController.save(resolved.verb, resolved.params);
             default:
-                return ordersController.index(resolved.params);
+                return null;
         }
     }
 
@@ -113,14 +130,12 @@ public class ControllerDispatcher extends HttpServlet {
      * Pattern is HTTP_VERB: /controller/action/?query
      */
     private static final class ResolvedRequest {
-        public static enum HTTP_VERB {GET, POST, OTHER}
-
-        public final HTTP_VERB verb;
+        public final HttpVerb verb;
         public final String controller;
         public final String action;
         public final Map<String, String[]> params;
 
-        private ResolvedRequest(HTTP_VERB verb, String controller, String action, Map<String, String[]> params) {
+        private ResolvedRequest(HttpVerb verb, String controller, String action, Map<String, String[]> params) {
             this.verb = verb;
             this.controller = controller;
             this.action = action;

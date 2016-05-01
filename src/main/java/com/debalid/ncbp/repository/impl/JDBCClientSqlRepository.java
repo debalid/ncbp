@@ -30,7 +30,6 @@ public class JDBCClientSqlRepository extends AbstractJDBCConsumer implements Cli
                 );
         ) {
             ps.execute();
-
             return this.mapAllToEntities(ps.getResultSet(), "");
         }
     }
@@ -45,7 +44,21 @@ public class JDBCClientSqlRepository extends AbstractJDBCConsumer implements Cli
 
     @Override
     public Optional<Client> find(Integer id) throws SQLException {
-        throw new UnsupportedOperationException();
+        try (
+                Connection connection = this.getDataSource().getConnection();
+                PreparedStatement ps = connection.prepareStatement(
+                        "SELECT clients.* " +
+                                "FROM clients " +
+                                "WHERE client_id = ?"
+                );
+        ) {
+            ps.setInt(1, id);
+            ps.execute();
+            List<Client> res = this.mapAllToEntities(ps.getResultSet(), "");
+            return res.isEmpty()
+                    ? Optional.<Client>empty()
+                    : Optional.of(res.get(0));
+        }
     }
 
     @Override
