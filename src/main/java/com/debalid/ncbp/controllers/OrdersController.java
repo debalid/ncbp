@@ -1,17 +1,21 @@
 package com.debalid.ncbp.controllers;
 
-import com.debalid.ncbp.ErrorResult;
-import com.debalid.ncbp.ModelViewResult;
+import com.debalid.mvc.Controller;
+import com.debalid.mvc.result.ActionResult;
+import com.debalid.mvc.result.ErrorResult;
+import com.debalid.mvc.result.ModelViewResult;
+import com.debalid.mvc.result.RedirectResult;
 import com.debalid.ncbp.entity.Client;
 import com.debalid.ncbp.entity.Order;
 import com.debalid.ncbp.repository.ClientSqlRepository;
 import com.debalid.ncbp.repository.OrderSqlRepository;
 import com.debalid.ncbp.repository.impl.JDBCClientSqlRepository;
 import com.debalid.ncbp.repository.impl.JDBCOrderSqlRepository;
-import com.debalid.ncbp.util.HttpVerb;
+import com.debalid.mvc.util.HttpVerb;
 import com.debalid.ncbp.util.Tuple;
 
 import javax.naming.NamingException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -26,11 +30,7 @@ import java.util.Optional;
  * Request-scoped representation of orders controller in MVC
  * Created by debalid on 01.05.2016.
  */
-public class OrdersController {
-    public static final String CONTROLLER_URI = "orders"; // GET: `/orders`
-    public static final String ACTION_ALL_BY_FILTER = "getAllByFilter"; // GET: `/orders/getAllByFilter`
-    public static final String ACTION_EDIT = "edit"; // GET: `/order/edit`
-    public static final String ACTION_SAVE = "save"; // POST: `/order/save`
+public class OrdersController extends Controller {
 
     private OrderSqlRepository ordersRepo;
     private ClientSqlRepository clientsRepo;
@@ -42,12 +42,12 @@ public class OrdersController {
     }
 
     // GET: / or /orders/
-    public ModelViewResult index(HttpVerb verb, Map<String, String[]> params) {
+    public ActionResult index(HttpVerb verb, Map<String, String[]> params) {
         return allByFilter(verb, params);
     }
 
     // GET: /orders/getAllByFilter?number=1234&clientTitle=tma
-    public ModelViewResult allByFilter(HttpVerb verb, Map<String, String[]> params) {
+    public ActionResult allByFilter(HttpVerb verb, Map<String, String[]> params) {
         if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
                 HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 
@@ -70,7 +70,7 @@ public class OrdersController {
     }
 
     // GET: /orders/edit/?number=1234
-    public ModelViewResult edit(HttpVerb verb, Map<String, String[]> params) {
+    public ActionResult edit(HttpVerb verb, Map<String, String[]> params) {
         if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
                 HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 
@@ -99,8 +99,27 @@ public class OrdersController {
         }
     }
 
+    // GET: /orders/create/
+    public ActionResult create(HttpVerb verb, Map<String, String[]> params) {
+        if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
+                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+
+        try {
+            List<Client> availableClients = clientsRepo.findAll();
+
+            return ModelViewResult.of(
+                    "orderAndAvailableClients",
+                    new Tuple<>(null, availableClients),
+                    "/edit.jsp"
+            );
+
+        } catch (SQLException e) {
+            return ErrorResult.of("SQL error :(", e.getMessage());
+        }
+    }
+
     // POST: /orders/save/
-    public ModelViewResult save(HttpVerb verb, Map<String, String[]> params) {
+    public ActionResult save(HttpVerb verb, Map<String, String[]> params) {
         if (!verb.equals(HttpVerb.POST)) return ErrorResult.of("Method not supported", null,
                 HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 
@@ -122,11 +141,15 @@ public class OrdersController {
             order.setClient(client.get());
 
             ordersRepo.save(order);
+
+            HttpServletRequest req = this.getRequest();
+            String url = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort() +
+                    req.getServletContext().getContextPath();
+            return RedirectResult.of(url);
+
         } catch (SQLException e) {
             return ErrorResult.of("SQL error :(", e.getMessage());
         }
-
-        return null;
     }
 
     private OrderParams extractOrderParams(Map<String, String[]> params) {

@@ -9,11 +9,19 @@
         <listener-class>com.debalid.ncbp.listeners.StartUpListener</listener-class>
     </listener>
     <servlet>
-        <servlet-name>Dispatcher</servlet-name>
-        <servlet-class>com.debalid.ncbp.ControllerDispatcher</servlet-class>
+        <servlet-name>ControllerDispatcher</servlet-name>
+        <servlet-class>com.debalid.mvc.ControllerDispatcher</servlet-class>
+        <init-param>
+            <param-name>ControllersPackage</param-name>
+            <param-value>com.debalid.ncbp.controllers</param-value>
+        </init-param>
+        <init-param>
+            <param-name>DefaultController</param-name>
+            <param-value>Orders</param-value>
+        </init-param>
     </servlet>
     <servlet-mapping>
-        <servlet-name>Dispatcher</servlet-name>
+        <servlet-name>ControllerDispatcher</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
     <error-page>

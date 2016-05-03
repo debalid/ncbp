@@ -13,18 +13,17 @@
 <body>
 <div class="container">
     <div class="page-header">
-        <h1>${requestScope.error.code}</h1>
+        <h1>${requestScope.error.code}
+            <c:choose>
+                <c:when test="${!empty requestScope.error.reason}">
+                    ${requestScope.error.reason}
+                </c:when>
+                <c:otherwise>
+                    Неизвестная ошибка
+                </c:otherwise>
+            </c:choose>
+        </h1>
     </div>
-    <h2>
-        <c:choose>
-            <c:when test="${!empty requestScope.error.reason}">
-                ${requestScope.error.reason}
-            </c:when>
-            <c:otherwise>
-                Неизвестная ошибка
-            </c:otherwise>
-        </c:choose>
-    </h2>
     <c:if test="${!empty requestScope.error.explicit}">
         <h5>${requestScope.error.explicit}</h5>
     </c:if>

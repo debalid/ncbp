@@ -1,10 +1,10 @@
-package com.debalid.ncbp;
+package com.debalid.mvc.result;
 
 /**
  * Represents result of http request based on simple model and jsp view.
  * Created by debalid on 01.05.2016.
  */
-public class ModelViewResult<T> {
+public class ModelViewResult<T> extends ActionResult{
     private final String viewName;
     private final String modelName;
     private final T model;
@@ -35,7 +35,8 @@ public class ModelViewResult<T> {
         return model;
     }
 
-    public boolean isError() {
-        return false;
+    @Override
+    public Type getType() {
+        return Type.ModelView;
     }
 }

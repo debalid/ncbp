@@ -1,4 +1,4 @@
-package com.debalid.ncbp.util;
+package com.debalid.mvc.util;
 
 /**
  * Created by debalid on 02.05.2016.
