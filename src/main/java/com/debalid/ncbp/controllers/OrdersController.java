@@ -74,10 +74,8 @@ public class OrdersController extends Controller {
         if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
                 HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 
-        String[] numberParams = params.get("number");
-
-        Long number = null;
-        if (numberParams != null && numberParams.length > 0) number = Long.parseLong(numberParams[0]);
+        Long number = extractNumber(params);
+        if (number == null) return ErrorResult.of("Wrong number argument", null, HttpServletResponse.SC_BAD_REQUEST);
 
         try {
             Optional<Order> order = ordersRepo.find(number);
@@ -142,14 +140,43 @@ public class OrdersController extends Controller {
 
             ordersRepo.save(order);
 
-            HttpServletRequest req = this.getRequest();
-            String url = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort() +
-                    req.getServletContext().getContextPath();
-            return RedirectResult.of(url);
+            return RedirectResult.of(this.buildRootURL());
 
         } catch (SQLException e) {
             return ErrorResult.of("SQL error :(", e.getMessage());
         }
+    }
+
+    //GET: /orders/remove/?number=[1]
+    public ActionResult remove(HttpVerb verb, Map<String, String[]> params) {
+        if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
+                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+
+        Long number = extractNumber(params);
+        if (number == null) return ErrorResult.of("Wrong number argument", null, HttpServletResponse.SC_BAD_REQUEST);
+
+        try {
+            ordersRepo.delete(number);
+            return RedirectResult.of(this.buildRootURL());
+        } catch (SQLException e) {
+            return ErrorResult.of("SQL error :(", e.getMessage());
+        }
+
+    }
+
+    private String buildRootURL() {
+        HttpServletRequest req = this.getRequest();
+        return req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort() +
+                req.getServletContext().getContextPath();
+    }
+
+    private Long extractNumber(Map<String, String[]> params) {
+        String[] numberParams = params.get("number");
+
+        Long number = null;
+        if (numberParams != null && numberParams.length > 0) number = Long.parseLong(numberParams[0]);
+
+        return number;
     }
 
     private OrderParams extractOrderParams(Map<String, String[]> params) {

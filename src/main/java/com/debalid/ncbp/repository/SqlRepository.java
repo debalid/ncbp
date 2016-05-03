@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface SqlRepository<TEntity, Identifier> {
     void save(TEntity some) throws SQLException;
 
-    TEntity delete(TEntity some) throws SQLException;
+    Optional<TEntity> delete(Identifier id) throws SQLException;
 
     Optional<TEntity> find(Identifier id) throws SQLException;
 

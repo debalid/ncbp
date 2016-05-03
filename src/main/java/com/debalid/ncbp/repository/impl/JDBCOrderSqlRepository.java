@@ -108,8 +108,30 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
         }
     }
 
-    public Order delete(Order some) {
-        throw new UnsupportedOperationException();
+    @Override
+    public Optional<Order> delete(Long id) throws SQLException {
+        try (
+                Connection connection = this.getDataSource().getConnection();
+                PreparedStatement selectStatement = connection.prepareStatement(
+                        "SELECT orders.*" +
+                                "FROM orders " +
+                                "WHERE order_number = ?"
+                );
+                PreparedStatement deleteStatement = connection.prepareStatement("" +
+                        "DELETE FROM ORDERS WHERE order_number=?"
+                )
+        ) {
+            selectStatement.setLong(1, id);
+            selectStatement.execute();
+
+            ResultSet rs = selectStatement.getResultSet();
+            if(!rs.next()) return Optional.empty();
+            Order order = JDBCEntityMappers.mapToOrder(rs, "");
+
+            deleteStatement.setLong(1, order.getNumber());
+            deleteStatement.execute();
+            return Optional.of(order);
+        }
     }
 
     public Optional<Order> find(Long id) throws SQLException {

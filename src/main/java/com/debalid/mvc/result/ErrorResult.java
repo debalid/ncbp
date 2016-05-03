@@ -39,6 +39,15 @@ public class ErrorResult extends ActionResult {
     /**
      * Returns error with corresponding information.
      * @param reason Short description of error.
+     * @return ErrorResult - simple model and view representation.
+     */
+    public static ErrorResult of(String reason) {
+        return new ErrorResult(reason, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Returns error with corresponding information.
+     * @param reason Short description of error.
      * @param explicit Full description of error.
      * @return ErrorResult - simple model and view representation.
      */

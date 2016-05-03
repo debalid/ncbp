@@ -67,7 +67,7 @@ public class JDBCClientSqlRepository extends AbstractJDBCConsumer implements Cli
     }
 
     @Override
-    public Client delete(Client some) throws SQLException {
+    public Optional<Client> delete(Integer id) throws SQLException {
         throw new UnsupportedOperationException();
     }
 }

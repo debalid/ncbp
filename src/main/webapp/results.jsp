@@ -26,6 +26,7 @@
             <th>Сумма заказа</th>
             <th>Клиент</th>
             <th>Телефон</th>
+            <th>Действия</th>
         </tr>
         </thead>
         <tbody>
@@ -46,6 +47,20 @@
                 </td>
                 <td>
                         ${order.client.phone}
+                </td>
+                <td>
+                    <div class="btn-toolbar" role="toolbar">
+                        <div class="btn-group" role="group">
+                            <a href="<c:url value="/orders/edit/?number=${order.number}"/>">
+                                <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
+                            </a>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <a href="<c:url value="/orders/remove/?number=${order.number}"/>">
+                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                            </a>
+                        </div>
+                    </div>
                 </td>
             </tr>
         </c:forEach>
