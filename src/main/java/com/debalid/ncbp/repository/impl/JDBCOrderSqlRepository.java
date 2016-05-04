@@ -22,21 +22,6 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
         super();
     }
 
-    private List<Order> mapJoinToEntities(ResultSet beginPoint, String ordersTablePrefix, String clientsTablePrefix)
-            throws SQLException {
-
-        List<Order> result = new LinkedList<Order>();
-        while (beginPoint.next()) {
-            Order order = JDBCEntityMappers.mapToOrder(beginPoint, ordersTablePrefix);
-
-            Client client = JDBCEntityMappers.mapToClient(beginPoint, clientsTablePrefix);
-            order.setClient(client);
-
-            result.add(order);
-        }
-        return result;
-    }
-
     public List<Order> findAll() throws SQLException {
         return findByNumberAndClient(null, null);
     }
@@ -176,5 +161,20 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
                     ? Optional.<Order>empty()
                     : Optional.of(found.get(0));
         }
+    }
+
+    private List<Order> mapJoinToEntities(ResultSet beginPoint, String ordersTablePrefix, String clientsTablePrefix)
+            throws SQLException {
+
+        List<Order> result = new LinkedList<Order>();
+        while (beginPoint.next()) {
+            Order order = JDBCEntityMappers.mapToOrder(beginPoint, ordersTablePrefix);
+
+            Client client = JDBCEntityMappers.mapToClient(beginPoint, clientsTablePrefix);
+            order.setClient(client);
+
+            result.add(order);
+        }
+        return result;
     }
 }
