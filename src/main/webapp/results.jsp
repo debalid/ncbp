@@ -15,7 +15,7 @@
 
 <div class="container">
     <div class="page-header">
-        <h1>Заказы</h1>
+        <a href="<c:url value="/" />"><h1>Заказы</h1></a>
     </div>
 
     <table class="table table-striped">
