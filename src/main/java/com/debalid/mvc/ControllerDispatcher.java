@@ -1,5 +1,6 @@
 package com.debalid.mvc;
 
+import com.debalid.mvc.annotation.AllowHttpVerbs;
 import com.debalid.mvc.result.ActionResult;
 import com.debalid.mvc.result.ErrorResult;
 import com.debalid.mvc.result.ModelViewResult;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Dispatcher servlet to determine what methods of what controllers should be executed based on request params.
@@ -36,6 +38,20 @@ public class ControllerDispatcher extends HttpServlet {
         processRequest(HttpVerb.POST, req, resp);
     }
 
+    /**
+     * Main method that processes current request.
+     * Includes 3 steps: resolving, dispatching, finishing (executing).
+     * Resolving means creating of ResolvedRequest instance.
+     * Dispatching means instantiation of controller and getting its action result (ActionResult instance)
+     * Executing means processing of given ActionResult instance - it may be jsp-view forwarding, redirect, error, etc...
+     * @see com.debalid.mvc.ControllerDispatcher.ResolvedRequest
+     * @see com.debalid.mvc.result.ActionResult
+     * @param verb Http verb of current request (GET, POST, ...)
+     * @param req Instance of HttpServletRequest that will be injected in controller.
+     * @param resp Instance of HttpServletResponse that will be injected in controller.
+     * @throws ServletException
+     * @throws IOException
+     */
     private void processRequest(HttpVerb verb, HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         //Try to resolve specified GET request.
@@ -49,13 +65,20 @@ public class ControllerDispatcher extends HttpServlet {
         }
 
         // Dispatch specified request and action.
-        ActionResult result = dispatchController(req, resp, resolved);
+        ActionResult result = dispatchControllerAndAction(req, resp, resolved);
 
         // Process resolved and dispatched request.
         finishRequest(req, resp, result);
     }
 
-    private ResolvedRequest resolveRequest(HttpVerb verb, HttpServletRequest req) {
+    /**
+     * Creating ResolvedRequest object based on current request.
+     * @see com.debalid.mvc.ControllerDispatcher.ResolvedRequest
+     * @param verb Http verb of current request (GET, POST, ...)
+     * @param req Instance of HttpServletRequest that will be used for building ResolvedRequest.
+     * @return Instance that represents information about controller and action that needs to be dispatched.
+     */
+    protected ResolvedRequest resolveRequest(HttpVerb verb, HttpServletRequest req) {
         if (this.defaultController == null) this.defaultController = this.getInitParameter("DefaultController");
         if (this.defaultController == null) throw new RuntimeException("Default controller must be declared!");
 
@@ -75,7 +98,16 @@ public class ControllerDispatcher extends HttpServlet {
         return new ResolvedRequest(verb, controller, action, params);
     }
 
-    private void finishRequest(HttpServletRequest req, HttpServletResponse resp, ActionResult ar)
+    /**
+     * Executes result of controller's action. It may be jsp-view forward, redirect, error, ...
+     * @see com.debalid.mvc.result.ActionResult
+     * @param req Instance of HttpServletRequest that will be used for executing current request.
+     * @param resp Instance of HttpServletResponse that will be used for executing current request.
+     * @param ar Controller's action result to be executed.
+     * @throws IOException
+     * @throws ServletException
+     */
+    protected void finishRequest(HttpServletRequest req, HttpServletResponse resp, ActionResult ar)
             throws IOException, ServletException {
         switch (ar.getType()) {
             case ModelView:
@@ -96,25 +128,29 @@ public class ControllerDispatcher extends HttpServlet {
         }
     }
 
-    // Definitely should be some reflection magic here! :)
-    private ActionResult dispatchController(HttpServletRequest req, HttpServletResponse resp, ResolvedRequest resolved)
+    /**
+     * Finds corresponding controller(class) and action (method) based on the resolved request.
+     * Definitely should be some reflection magic here! :)
+     * @param req Instance of HttpServletRequest that will be injected in controller.
+     * @param resp Instance of HttpServletResponse that will be injected in controller.
+     * @param resolved Object representing current resolved request.
+     * @return Result of dispatched action.
+     * @throws ServletException
+     * @throws IOException
+     */
+    private ActionResult dispatchControllerAndAction(HttpServletRequest req, HttpServletResponse resp, ResolvedRequest resolved)
             throws ServletException, IOException {
 
         try {
             //Instantiate request-scoped controller...
-            String controllersPackage = this.getInitParameter("ControllersPackage");
-            if (controllersPackage == null) {
-                return ErrorResult.of("Can't find proper controllers package!", null);
-            }
-            Class controllerClass = Class.forName(controllersPackage + "." + resolved.controller + "Controller");
-            Controller controller = (Controller)controllerClass.newInstance();
-            controller.setRequest(req);
-            controller.setResponse(resp);
+            Controller controller = this.buildController(req, resp, resolved);
 
             //...and invoke action
-            Method actionMethod = controllerClass
-                    .getDeclaredMethod(resolved.action.toLowerCase(), HttpVerb.class, Map.class);
-            ActionResult result = (ActionResult) actionMethod.invoke(controller, resolved.verb, resolved.params);
+            Method actionMethod = controller.getClass()
+                    .getDeclaredMethod(resolved.action.toLowerCase(), Map.class);
+            checkHttpVerbAnnotations(actionMethod, resolved);
+
+            ActionResult result = (ActionResult) actionMethod.invoke(controller, resolved.params);
             if (result == null)
                 throw new RuntimeException("Action `" + resolved.action +
                         "` of controller `" + resolved.controller +
@@ -128,11 +164,41 @@ public class ControllerDispatcher extends HttpServlet {
         }
     }
 
+    //Builds controller's instance based on resolved request.
+    private Controller buildController(HttpServletRequest req, HttpServletResponse resp, ResolvedRequest resolved)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        String controllersPackage = this.getInitParameter("ControllersPackage");
+        if (controllersPackage == null) {
+            throw new RuntimeException("Can't find proper controllers package!");
+        }
+        Class controllerClass = Class.forName(controllersPackage + "." + resolved.controller + "Controller");
+        Controller controller = (Controller)controllerClass.newInstance();
+        controller.setRequest(req);
+        controller.setResponse(resp);
+        controller.setHttpVerb(resolved.verb);
+        return controller;
+    }
+
+    // Checks provided http verb annotations for resolved controller's method.
+    private void checkHttpVerbAnnotations(Method actionMethod, ResolvedRequest resolved) {
+        AllowHttpVerbs ahv = actionMethod.getDeclaredAnnotation(AllowHttpVerbs.class);
+        if (ahv == null) {
+            throw new RuntimeException("Action `" + resolved.action +
+                    "` of controller `" + resolved.controller +
+                    "` does not allow any of http verbs!");
+        }
+        if (!Arrays.asList(ahv.values()).contains(resolved.verb)) {
+            throw new RuntimeException("Action `" + resolved.action +
+                    "` of controller `" + resolved.controller +
+                    "` does not allow http verb `" + resolved.verb + "`!");
+        }
+    }
+
     /**
      * Represents resolved request based on HttpServletRequest.
      * Pattern is HTTP_VERB: /controller/action/?query
      */
-    private static final class ResolvedRequest {
+    protected static final class ResolvedRequest {
         public final HttpVerb verb;
         public final String controller;
         public final String action;

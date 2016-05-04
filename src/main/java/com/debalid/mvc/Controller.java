@@ -1,5 +1,7 @@
 package com.debalid.mvc;
 
+import com.debalid.mvc.util.HttpVerb;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -10,6 +12,7 @@ import javax.servlet.http.HttpSession;
 public abstract class Controller {
     private HttpServletRequest request;
     private HttpServletResponse response;
+    private HttpVerb httpVerb;
 
     public HttpServletRequest getRequest() {
         return request;
@@ -25,5 +28,13 @@ public abstract class Controller {
 
     public void setResponse(HttpServletResponse response) {
         this.response = response;
+    }
+
+    public HttpVerb getHttpVerb() {
+        return httpVerb;
+    }
+
+    public void setHttpVerb(HttpVerb httpVerb) {
+        this.httpVerb = httpVerb;
     }
 }

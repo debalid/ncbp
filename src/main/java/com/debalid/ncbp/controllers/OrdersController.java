@@ -1,6 +1,7 @@
 package com.debalid.ncbp.controllers;
 
 import com.debalid.mvc.Controller;
+import com.debalid.mvc.annotation.AllowHttpVerbs;
 import com.debalid.mvc.result.ActionResult;
 import com.debalid.mvc.result.ErrorResult;
 import com.debalid.mvc.result.ModelViewResult;
@@ -42,15 +43,14 @@ public class OrdersController extends Controller {
     }
 
     // GET: / or /orders/
-    public ActionResult index(HttpVerb verb, Map<String, String[]> params) {
-        return allByFilter(verb, params);
+    @AllowHttpVerbs(values = {HttpVerb.GET})
+    public ActionResult index(Map<String, String[]> params) {
+        return allByFilter(params);
     }
 
-    // GET: /orders/getAllByFilter?number=1234&clientTitle=tma
-    public ActionResult allByFilter(HttpVerb verb, Map<String, String[]> params) {
-        if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
-                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-
+    // GET: /orders/getAllByFilter?number=[number]&clientTitle=[word]
+    @AllowHttpVerbs(values = {HttpVerb.GET})
+    public ActionResult allByFilter(Map<String, String[]> params) {
         String[] numberParams = params.get("number");
         String[] clientTitleParams = params.get("clientTitle");
 
@@ -70,10 +70,8 @@ public class OrdersController extends Controller {
     }
 
     // GET: /orders/edit/?number=1234
-    public ActionResult edit(HttpVerb verb, Map<String, String[]> params) {
-        if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
-                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-
+    @AllowHttpVerbs(values = {HttpVerb.GET})
+    public ActionResult edit(Map<String, String[]> params) {
         Long number = extractNumber(params);
         if (number == null) return ErrorResult.of("Wrong number argument", null, HttpServletResponse.SC_BAD_REQUEST);
 
@@ -98,10 +96,8 @@ public class OrdersController extends Controller {
     }
 
     // GET: /orders/create/
-    public ActionResult create(HttpVerb verb, Map<String, String[]> params) {
-        if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
-                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-
+    @AllowHttpVerbs(values = {HttpVerb.GET})
+    public ActionResult create(Map<String, String[]> params) {
         try {
             List<Client> availableClients = clientsRepo.findAll();
 
@@ -117,10 +113,8 @@ public class OrdersController extends Controller {
     }
 
     // POST: /orders/save/
-    public ActionResult save(HttpVerb verb, Map<String, String[]> params) {
-        if (!verb.equals(HttpVerb.POST)) return ErrorResult.of("Method not supported", null,
-                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-
+    @AllowHttpVerbs(values = {HttpVerb.POST})
+    public ActionResult save(Map<String, String[]> params) {
         OrderParams op = extractOrderParams(params);
 
         if (op.number == null) return ErrorResult.of("Cannot extract order number :(",
@@ -156,10 +150,8 @@ public class OrdersController extends Controller {
     }
 
     //GET: /orders/remove/?number=[1]
-    public ActionResult remove(HttpVerb verb, Map<String, String[]> params) {
-        if (!verb.equals(HttpVerb.GET)) return ErrorResult.of("Method not supported", null,
-                HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-
+    @AllowHttpVerbs(values = {HttpVerb.GET})
+    public ActionResult remove(Map<String, String[]> params) {
         Long number = extractNumber(params);
         if (number == null) return ErrorResult.of("Wrong number argument", null, HttpServletResponse.SC_BAD_REQUEST);
 
