@@ -53,10 +53,11 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
         try (
                 Connection connection = this.getDataSource().getConnection();
                 PreparedStatement statement = connection.prepareStatement(
-                        "SELECT orders.*, clients.* " +
-                                "FROM orders " +
-                                "LEFT JOIN clients ON orders.client_id = clients.client_id " +
-                                "WHERE CHAR(order_number) LIKE ? AND LOWER(title) LIKE ?"
+                        "SELECT ncbp.orders.*, ncbp.clients.* " +
+                                "FROM ncbp.orders " +
+                                "LEFT JOIN ncbp.clients ON ncbp.orders.client_id = ncbp.clients.client_id " +
+                                "WHERE CHAR(order_number) LIKE ? AND LOWER(title) LIKE ?" +
+                                "ORDER BY (order_number) ASC"
                 )
         ) {
             statement.setString(1, numberChunk != null ? "%" + numberChunk + "%" : "%");
@@ -71,15 +72,15 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
                 Connection connection = this.getDataSource().getConnection();
                 PreparedStatement selectStatement = connection.prepareStatement(
                         "SELECT count(*)" +
-                                "FROM orders " +
+                                "FROM ncbp.orders " +
                                 "WHERE order_number = ?"
                 );
                 PreparedStatement insertStatement = connection.prepareStatement(
-                        "INSERT INTO orders(date, priceTotal, client_id) " +
+                        "INSERT INTO ncbp.orders(date, priceTotal, client_id) " +
                                 "VALUES (?, ?, ?)"
                 );
                 PreparedStatement updateStatement = connection.prepareStatement(
-                        "UPDATE orders " +
+                        "UPDATE ncbp.orders " +
                                 "SET date = ? " +
                                 ", priceTotal = ? " +
                                 ", client_id = ? " +
@@ -113,12 +114,12 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
         try (
                 Connection connection = this.getDataSource().getConnection();
                 PreparedStatement selectStatement = connection.prepareStatement(
-                        "SELECT orders.*" +
-                                "FROM orders " +
+                        "SELECT ncbp.orders.*" +
+                                "FROM ncbp.orders " +
                                 "WHERE order_number = ?"
                 );
                 PreparedStatement deleteStatement = connection.prepareStatement("" +
-                        "DELETE FROM ORDERS WHERE order_number=?"
+                        "DELETE FROM ncbp.ORDERS WHERE order_number=?"
                 )
         ) {
             selectStatement.setLong(1, id);
@@ -139,10 +140,10 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
         try (
                 Connection connection = this.getDataSource().getConnection();
                 PreparedStatement statement = connection.prepareStatement(
-                        "SELECT orders.*, clients.* " +
-                                "FROM orders " +
-                                "LEFT JOIN clients ON orders.client_id = clients.client_id " +
-                                "WHERE orders.order_number = ?"
+                        "SELECT ncbp.orders.*, ncbp.clients.* " +
+                                "FROM ncbp.orders " +
+                                "LEFT JOIN ncbp.clients ON ncbp.orders.client_id = ncbp.clients.client_id " +
+                                "WHERE ncbp.orders.order_number = ?"
                 )
         ) {
             statement.setLong(1, id);

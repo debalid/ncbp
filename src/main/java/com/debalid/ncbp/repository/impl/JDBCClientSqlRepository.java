@@ -25,8 +25,8 @@ public class JDBCClientSqlRepository extends AbstractJDBCConsumer implements Cli
         try (
                 Connection connection = this.getDataSource().getConnection();
                 PreparedStatement ps = connection.prepareStatement(
-                        "SELECT clients.* " +
-                                "FROM clients"
+                        "SELECT ncbp.clients.* " +
+                                "FROM ncbp.clients"
                 );
         ) {
             ps.execute();
@@ -47,8 +47,8 @@ public class JDBCClientSqlRepository extends AbstractJDBCConsumer implements Cli
         try (
                 Connection connection = this.getDataSource().getConnection();
                 PreparedStatement ps = connection.prepareStatement(
-                        "SELECT clients.* " +
-                                "FROM clients " +
+                        "SELECT ncbp.clients.* " +
+                                "FROM ncbp.clients " +
                                 "WHERE client_id = ?"
                 );
         ) {
