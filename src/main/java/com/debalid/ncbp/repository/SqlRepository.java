@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface SqlRepository<TEntity, Identifier> {
     /**
      * Updates entity in db if present or create a new one.
+     *
      * @param some entity to be saved.
      * @throws SQLException
      */
@@ -19,6 +20,7 @@ public interface SqlRepository<TEntity, Identifier> {
 
     /**
      * Deletes entity with given identifier.
+     *
      * @param id identifier of entity that should be deleted.
      * @return empty if entity was not present or deleted entity.
      * @throws SQLException
@@ -27,6 +29,7 @@ public interface SqlRepository<TEntity, Identifier> {
 
     /**
      * Gets entity with given identifier.
+     *
      * @param id identifier of entity that should be returned.
      * @return empty if entity was not present or found entity.
      * @throws SQLException
@@ -35,6 +38,7 @@ public interface SqlRepository<TEntity, Identifier> {
 
     /**
      * Gets all entities from database.
+     *
      * @return list of all available entities.
      * @throws SQLException
      */

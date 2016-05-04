@@ -4,7 +4,7 @@ package com.debalid.mvc.result;
  * Represents result of http request based on simple model and jsp view.
  * Created by debalid on 01.05.2016.
  */
-public class ModelViewResult<T> extends ActionResult{
+public class ModelViewResult<T> extends ActionResult {
     private final String viewName;
     private final String modelName;
     private final T model;

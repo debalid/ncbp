@@ -9,13 +9,15 @@ import java.util.List;
  * Main repository interface for orders.
  * Created by debalid on 20.04.2016.
  */
-public interface OrderSqlRepository extends SqlRepository<Order,Long> {
+public interface OrderSqlRepository extends SqlRepository<Order, Long> {
     List<Order> findByNumber(String numberChunk) throws SQLException;
+
     List<Order> findByClientTitle(String clientTitleChunk) throws SQLException;
 
     /**
      * Find orders by its number and client's title
-     * @param numberChunk Chunk to be contained in number. Null means ignore.
+     *
+     * @param numberChunk      Chunk to be contained in number. Null means ignore.
      * @param clientTitleChunk Chunk to be contained is client's title. Null means ignore.
      * @return List of founded orders.
      * @throws SQLException If there is exception during connection with database.

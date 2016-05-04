@@ -7,9 +7,10 @@ import javax.servlet.http.HttpServletResponse;
  * Created by debalid on 03.05.2016.
  */
 public abstract class ActionResult {
-    public static enum Type{
+    public static enum Type {
         ModelView, Error, Redirect
     }
+
     public int getCode() {
         return HttpServletResponse.SC_OK;
     }

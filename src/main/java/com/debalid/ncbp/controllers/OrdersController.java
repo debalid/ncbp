@@ -44,6 +44,7 @@ public class OrdersController extends Controller {
 
     /**
      * GET: / or /orders/
+     *
      * @param params map of params that can contain any keys.
      * @return Page of all available orders or error.
      */
@@ -56,6 +57,7 @@ public class OrdersController extends Controller {
      * GET: /orders/getAllByFilter?number=[number]&clientTitle=[word]
      * List of available orders by its number content (chunk :)) and its client's title content.
      * Note: if number or clientTitle are null then it shows all avaialble orders.
+     *
      * @param params map of params that should contain keys `number` and `clientTitle`.
      * @return Page of filtered orders or error.
      */
@@ -82,6 +84,7 @@ public class OrdersController extends Controller {
     /**
      * GET: /orders/edit/?number=[number]
      * Gets the edit page of chosen order.
+     *
      * @param params map of params that should contain key `number`.
      * @return Page of editing an order or error.
      */
@@ -113,6 +116,7 @@ public class OrdersController extends Controller {
     /**
      * GET: /orders/create/
      * Gets the create page of chosen order.
+     *
      * @param params map of params that can contain any key.
      * @return Page of creating an order or error.
      */
@@ -137,9 +141,10 @@ public class OrdersController extends Controller {
      * BODY: ?number=[number]&clientId=[number|null]&date=[yyyy-MM-dd]&total=[number]
      * Saves order in backend database. It means updating if provided order already exists or creating a new one.
      * Note: params of this method will be mapped to OrderParam object.
-     * @see com.debalid.ncbp.controllers.OrdersController.OrderParams
+     *
      * @param params map of params that should contain keys `number`, `clientId`, `date`, `total`.
      * @return Redirect to index (`/`) or error.
+     * @see com.debalid.ncbp.controllers.OrdersController.OrderParams
      */
     @AllowHttpVerbs(values = {HttpVerb.POST})
     public ActionResult save(Map<String, String[]> params) {
@@ -180,6 +185,7 @@ public class OrdersController extends Controller {
     /**
      * GET: /orders/remove/?number=[number]
      * Removes order with chosen number.
+     *
      * @param params map of params that should contain key `number`.
      * @return Redirect to index (`/`) or error.
      */

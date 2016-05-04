@@ -38,6 +38,7 @@ public class ErrorResult extends ActionResult {
 
     /**
      * Returns error with corresponding information.
+     *
      * @param reason Short description of error.
      * @return ErrorResult - simple model and view representation.
      */
@@ -47,7 +48,8 @@ public class ErrorResult extends ActionResult {
 
     /**
      * Returns error with corresponding information.
-     * @param reason Short description of error.
+     *
+     * @param reason   Short description of error.
      * @param explicit Full description of error.
      * @return ErrorResult - simple model and view representation.
      */
@@ -57,9 +59,10 @@ public class ErrorResult extends ActionResult {
 
     /**
      * Returns error with corresponding information.
-     * @param reason Short description of error.
+     *
+     * @param reason   Short description of error.
      * @param explicit Full description of error.
-     * @param code HTTP code of error.
+     * @param code     HTTP code of error.
      * @return ErrorResult - simple model and view representation.
      */
     public static ErrorResult of(String reason, String explicit, int code) {
