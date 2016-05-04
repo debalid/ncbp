@@ -76,13 +76,13 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
                                 "WHERE order_number = ?"
                 );
                 PreparedStatement insertStatement = connection.prepareStatement(
-                        "INSERT INTO ncbp.orders(order_number, date, priceTotal, client_id) " +
+                        "INSERT INTO ncbp.orders(order_number, date, price_total, client_id) " +
                                 "VALUES (?, ?, ?, ?)"
                 );
                 PreparedStatement updateStatement = connection.prepareStatement(
                         "UPDATE ncbp.orders " +
                                 "SET date = ? " +
-                                ", priceTotal = ? " +
+                                ", price_total = ? " +
                                 ", client_id = ? " +
                                 "WHERE order_number = ?"
                 );

@@ -15,7 +15,7 @@ public class JDBCEntityMappers {
     static Order mapToOrder(ResultSet rs, String tablePrefix) throws SQLException {
         Order order = new Order();
         order.setNumber(rs.getLong(tablePrefix + "order_number"));
-        order.setPriceTotal(rs.getInt(tablePrefix + "priceTotal"));
+        order.setPriceTotal(rs.getInt(tablePrefix + "price_total"));
         order.setDate(rs.getDate(tablePrefix + "date"));
         return order;
     }
