@@ -56,7 +56,7 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
                         "SELECT ncbp.orders.*, ncbp.clients.* " +
                                 "FROM ncbp.orders " +
                                 "LEFT JOIN ncbp.clients ON ncbp.orders.client_id = ncbp.clients.client_id " +
-                                "WHERE CHAR(order_number) LIKE ? AND LOWER(title) LIKE ?" +
+                                "WHERE CHAR(order_number) LIKE ? AND (LOWER(title) LIKE ? OR title IS NULL)" +
                                 "ORDER BY (order_number) ASC"
                 )
         ) {
@@ -97,12 +97,20 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
                 insertStatement.setLong(1, some.getNumber());
                 insertStatement.setDate(2, new java.sql.Date(some.getDate().getTime()));
                 insertStatement.setInt(3, some.getPriceTotal());
-                insertStatement.setInt(4, some.getClient().getId());
+                if (some.getClient() != null) {
+                    insertStatement.setInt(4, some.getClient().getId());
+                } else {
+                    insertStatement.setNull(4, Types.INTEGER);
+                }
                 insertStatement.execute();
             } else {
                 updateStatement.setDate(1, new java.sql.Date(some.getDate().getTime()));
                 updateStatement.setInt(2, some.getPriceTotal());
-                updateStatement.setInt(3, some.getClient().getId());
+                if (some.getClient() != null) {
+                    updateStatement.setInt(3, some.getClient().getId());
+                } else {
+                    updateStatement.setNull(3, Types.INTEGER);
+                }
                 updateStatement.setLong(4, some.getNumber());
                 updateStatement.execute();
             }

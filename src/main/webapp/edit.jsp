@@ -57,11 +57,16 @@
         <div class="form-group input-group">
             <span class="input-group-addon">Клиент</span>
             <select class="form-control" name="clientId" id="clientId">
+                <li>
+                    <option value="null">
+                        Нет клиента
+                    </option>
+                </li>
                 <c:forEach items="${requestScope.orderAndAvailableClients.second}" var="client">
                     <c:choose>
                         <c:when test="${requestScope.orderAndAvailableClients.first.client.id eq client.id}">
                             <li>
-                                <option value="${client.id}" checked>
+                                <option value="${client.id}" selected>
                                         ${client.title}, ${client.phone}
                                 </option>
                             </li>

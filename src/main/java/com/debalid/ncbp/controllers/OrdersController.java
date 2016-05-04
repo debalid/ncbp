@@ -125,23 +125,26 @@ public class OrdersController extends Controller {
 
         if (op.number == null) return ErrorResult.of("Cannot extract order number :(",
                 "Cannot extract order number from request params.", HttpServletResponse.SC_BAD_REQUEST);
+        if (op.number < 100) return ErrorResult.of("Cannot process order number :(",
+                "There is a requirement that order number `" + op.number + "` should have at least 3 digits.",
+                HttpServletResponse.SC_BAD_REQUEST);
         if (op.date == null) return ErrorResult.of("Cannot extract date :(",
                 "Cannot extract date from request params.", HttpServletResponse.SC_BAD_REQUEST);
         if (op.priceTotal == null) return ErrorResult.of("Cannot extract price :(",
                 "Cannot extract price from request params.", HttpServletResponse.SC_BAD_REQUEST);
-        if (op.clientId == null) return ErrorResult.of("Cannot extract client :(",
-                "Cannot extract client id from request params.", HttpServletResponse.SC_BAD_REQUEST);
 
         try {
-            Optional<Client> client = clientsRepo.find(op.clientId);
-            if (!client.isPresent())
-                return ErrorResult.of("Cannot find client :(", "Cannot find client with id " + op.clientId + ".");
-
             Order order = new Order();
             order.setNumber(op.number);
             order.setPriceTotal(op.priceTotal);
             order.setDate(op.date);
-            order.setClient(client.get());
+
+            if (op.clientId != null) {
+                Optional<Client> client = clientsRepo.find(op.clientId);
+                if (!client.isPresent())
+                    return ErrorResult.of("Cannot find client :(", "Cannot find client with id " + op.clientId + ".");
+                order.setClient(client.get());
+            } else order.setClient(null);
 
             ordersRepo.save(order);
 
@@ -191,23 +194,26 @@ public class OrdersController extends Controller {
         String[] priceTotalParams = params.get("total");
 
         Long number = null;
-        if (numberParams != null && numberParams.length > 0) number = Long.parseLong(numberParams[0]);
-
         Integer clientId = null;
-        if (clientIdParams != null && clientIdParams.length > 0) clientId = Integer.parseInt(clientIdParams[0]);
+        try {
+            if (numberParams != null && numberParams.length > 0) number = Long.parseLong(numberParams[0]);
+            if (clientIdParams != null && clientIdParams.length > 0) clientId = Integer.parseInt(clientIdParams[0]);
+        } catch (NumberFormatException nfe) {
+            //nothing - values are already nulls.
+        }
 
         Date date = null;
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         if (dateParams != null && dateParams.length > 0) try {
             date = df.parse(dateParams[0]);
         } catch (ParseException e) {
-            date = null;
+            //nothing - value is already null
         }
 
         Integer priceTotal = null;
         if (priceTotalParams != null && priceTotalParams.length > 0) priceTotal = Integer.parseInt(priceTotalParams[0]);
 
-        return new OrderParams(number, clientId != null ? clientId : -1, date, priceTotal != null ? priceTotal : -1);
+        return new OrderParams(number, clientId, date, priceTotal);
     }
 
     private class OrderParams {

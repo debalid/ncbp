@@ -42,12 +42,19 @@
                     <i class="fa fa-rub"></i>
                         ${order.priceTotal}
                 </td>
-                <td>
-                        ${order.client.title}
-                </td>
-                <td>
-                        ${order.client.phone}
-                </td>
+                <c:choose>
+                    <c:when test="${empty order.client}">
+                        <td>-</td>
+                        <td>-</td>
+                    </c:when>
+                    <c:otherwise>
+                        <td>
+                                ${order.client.title}
+                        <td>
+                                ${order.client.phone}
+                        </td>
+                    </c:otherwise>
+                </c:choose>
                 <td>
                     <div class="btn-toolbar" role="toolbar">
                         <div class="btn-group" role="group">

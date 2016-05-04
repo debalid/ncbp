@@ -13,16 +13,22 @@ import java.sql.SQLException;
 public class JDBCEntityMappers {
     // Note - this method does not establish connection between Order and Client!
     static Order mapToOrder(ResultSet rs, String tablePrefix) throws SQLException {
+        Long number = rs.getLong(tablePrefix + "order_number");
+        if (rs.wasNull()) return null;
+
         Order order = new Order();
-        order.setNumber(rs.getLong(tablePrefix + "order_number"));
+        order.setNumber(number);
         order.setPriceTotal(rs.getInt(tablePrefix + "price_total"));
         order.setDate(rs.getDate(tablePrefix + "date"));
         return order;
     }
 
     static Client mapToClient(ResultSet rs, String tablePrefix) throws SQLException {
+        Integer clientId = rs.getInt(tablePrefix + "client_id");
+        if (rs.wasNull()) return null;
+
         Client client = new Client();
-        client.setId(rs.getInt(tablePrefix + "client_id"));
+        client.setId(clientId);
         client.setTitle(rs.getString(tablePrefix + "title"));
         client.setPhone(rs.getString(tablePrefix + "phone"));
         return client;
