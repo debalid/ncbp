@@ -32,23 +32,33 @@ import java.util.Optional;
  * Created by debalid on 01.05.2016.
  */
 public class OrdersController extends Controller {
-
+    // Repositories of entities. Should be injected.
     private OrderSqlRepository ordersRepo;
     private ClientSqlRepository clientsRepo;
 
-    // TODO: switch to DI
     public OrdersController() throws NamingException {
+        // TODO: switch to DI
         ordersRepo = new JDBCOrderSqlRepository();
         clientsRepo = new JDBCClientSqlRepository();
     }
 
-    // GET: / or /orders/
+    /**
+     * GET: / or /orders/
+     * @param params map of params that can contain any keys.
+     * @return Page of all available orders or error.
+     */
     @AllowHttpVerbs(values = {HttpVerb.GET})
     public ActionResult index(Map<String, String[]> params) {
         return allByFilter(params);
     }
 
-    // GET: /orders/getAllByFilter?number=[number]&clientTitle=[word]
+    /**
+     * GET: /orders/getAllByFilter?number=[number]&clientTitle=[word]
+     * List of available orders by its number content (chunk :)) and its client's title content.
+     * Note: if number or clientTitle are null then it shows all avaialble orders.
+     * @param params map of params that should contain keys `number` and `clientTitle`.
+     * @return Page of filtered orders or error.
+     */
     @AllowHttpVerbs(values = {HttpVerb.GET})
     public ActionResult allByFilter(Map<String, String[]> params) {
         String[] numberParams = params.get("number");
@@ -69,7 +79,12 @@ public class OrdersController extends Controller {
         }
     }
 
-    // GET: /orders/edit/?number=1234
+    /**
+     * GET: /orders/edit/?number=[number]
+     * Gets the edit page of chosen order.
+     * @param params map of params that should contain key `number`.
+     * @return Page of editing an order or error.
+     */
     @AllowHttpVerbs(values = {HttpVerb.GET})
     public ActionResult edit(Map<String, String[]> params) {
         Long number = extractNumber(params);
@@ -95,7 +110,12 @@ public class OrdersController extends Controller {
         }
     }
 
-    // GET: /orders/create/
+    /**
+     * GET: /orders/create/
+     * Gets the create page of chosen order.
+     * @param params map of params that can contain any key.
+     * @return Page of creating an order or error.
+     */
     @AllowHttpVerbs(values = {HttpVerb.GET})
     public ActionResult create(Map<String, String[]> params) {
         try {
@@ -112,7 +132,15 @@ public class OrdersController extends Controller {
         }
     }
 
-    // POST: /orders/save/
+    /**
+     * GET: POST: /orders/save/
+     * BODY: ?number=[number]&clientId=[number|null]&date=[yyyy-MM-dd]&total=[number]
+     * Saves order in backend database. It means updating if provided order already exists or creating a new one.
+     * Note: params of this method will be mapped to OrderParam object.
+     * @see com.debalid.ncbp.controllers.OrdersController.OrderParams
+     * @param params map of params that should contain keys `number`, `clientId`, `date`, `total`.
+     * @return Redirect to index (`/`) or error.
+     */
     @AllowHttpVerbs(values = {HttpVerb.POST})
     public ActionResult save(Map<String, String[]> params) {
         OrderParams op = extractOrderParams(params);
@@ -149,7 +177,12 @@ public class OrdersController extends Controller {
         }
     }
 
-    //GET: /orders/remove/?number=[1]
+    /**
+     * GET: /orders/remove/?number=[number]
+     * Removes order with chosen number.
+     * @param params map of params that should contain key `number`.
+     * @return Redirect to index (`/`) or error.
+     */
     @AllowHttpVerbs(values = {HttpVerb.GET})
     public ActionResult remove(Map<String, String[]> params) {
         Long number = extractNumber(params);
@@ -164,12 +197,14 @@ public class OrdersController extends Controller {
 
     }
 
+    // Determine its root url.
     private String buildRootURL() {
         HttpServletRequest req = this.getRequest();
         return req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort() +
                 req.getServletContext().getContextPath();
     }
 
+    // Extracts `number` from params and parses it to nullable Long.
     private Long extractNumber(Map<String, String[]> params) {
         String[] numberParams = params.get("number");
 
@@ -179,6 +214,7 @@ public class OrdersController extends Controller {
         return number;
     }
 
+    // Builds OrderParams instance based on provided params.
     private OrderParams extractOrderParams(Map<String, String[]> params) {
         String[] numberParams = params.get("number");
         String[] clientIdParams = params.get("clientId");
@@ -208,6 +244,7 @@ public class OrdersController extends Controller {
         return new OrderParams(number, clientId, date, priceTotal);
     }
 
+    // Represents params of order that should be saved.
     private class OrderParams {
         public final Long number;
         public final Integer clientId;

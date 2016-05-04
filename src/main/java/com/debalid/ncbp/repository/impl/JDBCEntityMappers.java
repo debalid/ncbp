@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Contains static method for mapping entities from result sets.
+ * Contains static common methods for mapping entities from result sets.
  * Created by debalid on 01.05.2016.
  */
 public class JDBCEntityMappers {

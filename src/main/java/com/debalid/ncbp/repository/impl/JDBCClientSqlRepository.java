@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
+ * Pure JDBC implementation of Client repository.
  * Created by debalid on 01.05.2016.
  */
 public class JDBCClientSqlRepository extends AbstractJDBCConsumer implements ClientSqlRepository {

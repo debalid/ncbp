@@ -15,6 +15,7 @@ import javax.sql.DataSource;
 import java.io.IOException;
 
 /**
+ * Startup listener that implements some FlyWay migrations.
  * Created by debalid on 20.04.2016.
  */
 @javax.servlet.annotation.WebListener

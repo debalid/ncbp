@@ -3,6 +3,7 @@ package com.debalid.ncbp.entity;
 import java.util.Date;
 
 /**
+ * Entity for Order. It has many-to-one relationship with Client.
  * Created by debalid on 20.04.2016.
  */
 public class Order {

@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
+ * Singleton for configuration needs. Should be switched to something better.
  * Created by debalid on 20.04.2016.
  */
 public class Configuration {

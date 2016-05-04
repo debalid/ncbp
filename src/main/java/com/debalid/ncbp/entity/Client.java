@@ -1,6 +1,7 @@
 package com.debalid.ncbp.entity;
 
 /**
+ * Entity for client. It has one-to-many relationship with Order.
  * Created by debalid on 20.04.2016.
  */
 public class Client {

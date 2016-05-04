@@ -74,18 +74,7 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
                         "SELECT count(*)" +
                                 "FROM ncbp.orders " +
                                 "WHERE order_number = ?"
-                );
-                PreparedStatement insertStatement = connection.prepareStatement(
-                        "INSERT INTO ncbp.orders(order_number, date, price_total, client_id) " +
-                                "VALUES (?, ?, ?, ?)"
-                );
-                PreparedStatement updateStatement = connection.prepareStatement(
-                        "UPDATE ncbp.orders " +
-                                "SET date = ? " +
-                                ", price_total = ? " +
-                                ", client_id = ? " +
-                                "WHERE order_number = ?"
-                );
+                )
         ) {
             selectStatement.setLong(1, some.getNumber());
             selectStatement.execute();
@@ -94,26 +83,51 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
             rs.next();
             int founded = rs.getInt(1);
             if (founded == 0) {
-                insertStatement.setLong(1, some.getNumber());
-                insertStatement.setDate(2, new java.sql.Date(some.getDate().getTime()));
-                insertStatement.setInt(3, some.getPriceTotal());
-                if (some.getClient() != null) {
-                    insertStatement.setInt(4, some.getClient().getId());
-                } else {
-                    insertStatement.setNull(4, Types.INTEGER);
-                }
-                insertStatement.execute();
+                insertOrder(connection, some);
             } else {
-                updateStatement.setDate(1, new java.sql.Date(some.getDate().getTime()));
-                updateStatement.setInt(2, some.getPriceTotal());
-                if (some.getClient() != null) {
-                    updateStatement.setInt(3, some.getClient().getId());
-                } else {
-                    updateStatement.setNull(3, Types.INTEGER);
-                }
-                updateStatement.setLong(4, some.getNumber());
-                updateStatement.execute();
+                updateOrder(connection, some);
             }
+        }
+    }
+
+    private void insertOrder(Connection connection, Order some) throws SQLException {
+        try (
+                PreparedStatement insertStatement = connection.prepareStatement(
+                        "INSERT INTO ncbp.orders(order_number, date, price_total, client_id) " +
+                                "VALUES (?, ?, ?, ?)"
+                )
+        ) {
+            insertStatement.setLong(1, some.getNumber());
+            insertStatement.setDate(2, new java.sql.Date(some.getDate().getTime()));
+            insertStatement.setInt(3, some.getPriceTotal());
+            if (some.getClient() != null) {
+                insertStatement.setInt(4, some.getClient().getId());
+            } else {
+                insertStatement.setNull(4, Types.INTEGER);
+            }
+            insertStatement.execute();
+        }
+    }
+
+    private void updateOrder(Connection connection, Order some) throws SQLException {
+        try (
+                PreparedStatement updateStatement = connection.prepareStatement(
+                        "UPDATE ncbp.orders " +
+                                "SET date = ? " +
+                                ", price_total = ? " +
+                                ", client_id = ? " +
+                                "WHERE order_number = ?"
+                )
+        ) {
+            updateStatement.setDate(1, new java.sql.Date(some.getDate().getTime()));
+            updateStatement.setInt(2, some.getPriceTotal());
+            if (some.getClient() != null) {
+                updateStatement.setInt(3, some.getClient().getId());
+            } else {
+                updateStatement.setNull(3, Types.INTEGER);
+            }
+            updateStatement.setLong(4, some.getNumber());
+            updateStatement.execute();
         }
     }
 
@@ -134,12 +148,12 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
             selectStatement.execute();
 
             ResultSet rs = selectStatement.getResultSet();
-            if(!rs.next()) return Optional.empty();
+            if (!rs.next()) return Optional.empty();
             Order order = JDBCEntityMappers.mapToOrder(rs, "");
 
-            deleteStatement.setLong(1, order.getNumber());
+            deleteStatement.setLong(1, id);
             deleteStatement.execute();
-            return Optional.of(order);
+            return Optional.ofNullable(order);
         }
     }
 

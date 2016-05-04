@@ -1,6 +1,7 @@
 package com.debalid.ncbp.util;
 
 /**
+ * Simple tuple class.
  * Created by debalid on 01.05.2016.
  */
 public class Tuple<F, S> {
