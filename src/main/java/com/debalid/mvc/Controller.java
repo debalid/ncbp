@@ -4,9 +4,12 @@ import com.debalid.mvc.util.HttpVerb;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
+ * Base class for all controllers. They are required to implement this class.
+ * Action is a method that receive Map<String, String[]> args and produces ActionResult.
+ * All custom actions should implement this pattern.
+ * Also, this class provides injected HttpServletRequest and HttpServletResponse instances for convenience.
  * Created by debalid on 03.05.2016.
  */
 public abstract class Controller {
