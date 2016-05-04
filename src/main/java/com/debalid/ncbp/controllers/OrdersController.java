@@ -123,9 +123,14 @@ public class OrdersController extends Controller {
 
         OrderParams op = extractOrderParams(params);
 
-        if (op.date == null) return ErrorResult.of("Cannot extract date :(", "Cannot extract date from request params.");
-        if (op.priceTotal < 0) return ErrorResult.of("Cannot extract price :(", "Cannot extract price from request params.");
-        if (op.clientId < 0) return ErrorResult.of("Cannot extract client :(", "Cannot extract client if from request params.");
+        if (op.number == null) return ErrorResult.of("Cannot extract order number :(",
+                "Cannot extract order number from request params.", HttpServletResponse.SC_BAD_REQUEST);
+        if (op.date == null) return ErrorResult.of("Cannot extract date :(",
+                "Cannot extract date from request params.", HttpServletResponse.SC_BAD_REQUEST);
+        if (op.priceTotal == null) return ErrorResult.of("Cannot extract price :(",
+                "Cannot extract price from request params.", HttpServletResponse.SC_BAD_REQUEST);
+        if (op.clientId == null) return ErrorResult.of("Cannot extract client :(",
+                "Cannot extract client id from request params.", HttpServletResponse.SC_BAD_REQUEST);
 
         try {
             Optional<Client> client = clientsRepo.find(op.clientId);
@@ -207,11 +212,11 @@ public class OrdersController extends Controller {
 
     private class OrderParams {
         public final Long number;
-        public final int clientId;
+        public final Integer clientId;
         public final Date date;
-        public final int priceTotal;
+        public final Integer priceTotal;
 
-        private OrderParams(Long number, int clientId, Date date, int priceTotal) {
+        private OrderParams(Long number, Integer clientId, Date date, Integer priceTotal) {
             this.number = number;
             this.clientId = clientId;
             this.date = date;

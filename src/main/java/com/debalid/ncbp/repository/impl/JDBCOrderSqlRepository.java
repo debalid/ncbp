@@ -76,8 +76,8 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
                                 "WHERE order_number = ?"
                 );
                 PreparedStatement insertStatement = connection.prepareStatement(
-                        "INSERT INTO ncbp.orders(date, priceTotal, client_id) " +
-                                "VALUES (?, ?, ?)"
+                        "INSERT INTO ncbp.orders(order_number, date, priceTotal, client_id) " +
+                                "VALUES (?, ?, ?, ?)"
                 );
                 PreparedStatement updateStatement = connection.prepareStatement(
                         "UPDATE ncbp.orders " +
@@ -94,10 +94,10 @@ public class JDBCOrderSqlRepository extends AbstractJDBCConsumer
             rs.next();
             int founded = rs.getInt(1);
             if (founded == 0) {
-                //insertStatement.setLong(1, some.getNumber()); TODO: handle
-                insertStatement.setDate(1, new java.sql.Date(some.getDate().getTime()));
-                insertStatement.setInt(2, some.getPriceTotal());
-                insertStatement.setInt(3, some.getClient().getId());
+                insertStatement.setLong(1, some.getNumber());
+                insertStatement.setDate(2, new java.sql.Date(some.getDate().getTime()));
+                insertStatement.setInt(3, some.getPriceTotal());
+                insertStatement.setInt(4, some.getClient().getId());
                 insertStatement.execute();
             } else {
                 updateStatement.setDate(1, new java.sql.Date(some.getDate().getTime()));

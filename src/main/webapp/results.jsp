@@ -67,15 +67,26 @@
         </tbody>
     </table>
 
-    <form class="form-inline" action="">
-        <div class="input-group">
-            <input name="number" type="text" class="form-control" placeholder="Содержимое номера"/>
+    <div class="row">
+        <div class="col-md-8">
+            <form class="form-inline" action="">
+                <div class="input-group">
+                    <input name="number" type="text" class="form-control" placeholder="Содержимое номера"/>
+                </div>
+                <div class="input-group">
+                    <input name="clientTitle" type="text" class="form-control" placeholder="Содержимое имени"/>
+                </div>
+                <button type="submit" class="btn btn-primary">OK</button>
+            </form>
         </div>
-        <div class="input-group">
-            <input name="clientTitle" type="text" class="form-control" placeholder="Содержимое имени"/>
+        <div class="col-md-4">
+            <div class="pull-right">
+                <a href="<c:url value="/orders/create/"/>">
+                    <button class="btn btn-success">Добавить заказ</button>
+                </a>
+            </div>
         </div>
-        <input type="submit" value="OK"/>
-    </form>
+    </div>
 </div>
 
 <!-- Bootstrap js cdn -->
