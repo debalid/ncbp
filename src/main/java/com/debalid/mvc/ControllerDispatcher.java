@@ -44,25 +44,19 @@ public class ControllerDispatcher extends HttpServlet {
      * Resolving means creating of ResolvedRequest instance.
      * Dispatching means instantiation of controller and getting its action result (ActionResult instance)
      * Executing means processing of given ActionResult instance - it may be jsp-view forwarding, redirect, error, etc...
-     * @see com.debalid.mvc.ControllerDispatcher.ResolvedRequest
-     * @see com.debalid.mvc.result.ActionResult
+     *
      * @param verb Http verb of current request (GET, POST, ...)
-     * @param req Instance of HttpServletRequest that will be injected in controller.
+     * @param req  Instance of HttpServletRequest that will be injected in controller.
      * @param resp Instance of HttpServletResponse that will be injected in controller.
      * @throws ServletException
      * @throws IOException
+     * @see com.debalid.mvc.ControllerDispatcher.ResolvedRequest
+     * @see com.debalid.mvc.result.ActionResult
      */
     private void processRequest(HttpVerb verb, HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        //Try to resolve specified GET request.
+        //Try to resolve specified request.
         ResolvedRequest resolved = resolveRequest(verb, req);
-        if (resolved == null) { //not resolved
-            finishRequest(req, resp,
-                    ErrorResult.of("Cannot resolve GET request",
-                            "Cannot resolve specified uri `" + req.getServletPath() + "`.",
-                            404));
-            return;
-        }
 
         // Dispatch specified request and action.
         ActionResult result = dispatchControllerAndAction(req, resp, resolved);
@@ -73,10 +67,11 @@ public class ControllerDispatcher extends HttpServlet {
 
     /**
      * Creating ResolvedRequest object based on current request.
-     * @see com.debalid.mvc.ControllerDispatcher.ResolvedRequest
+     *
      * @param verb Http verb of current request (GET, POST, ...)
-     * @param req Instance of HttpServletRequest that will be used for building ResolvedRequest.
+     * @param req  Instance of HttpServletRequest that will be used for building ResolvedRequest.
      * @return Instance that represents information about controller and action that needs to be dispatched.
+     * @see com.debalid.mvc.ControllerDispatcher.ResolvedRequest
      */
     protected ResolvedRequest resolveRequest(HttpVerb verb, HttpServletRequest req) {
         if (this.defaultController == null) this.defaultController = this.getInitParameter("DefaultController");
@@ -85,7 +80,8 @@ public class ControllerDispatcher extends HttpServlet {
         String uri = req.getServletPath();
         // pattern: /controller/action/?query
         if (!uri.matches(URI_REGEXP)) {
-            return null;
+            //not resolved
+            throw new RuntimeException("Cannot resolve specified uri `" + req.getServletPath() + "`.");
         }
 
         String[] parts = uri.split("/");
@@ -100,12 +96,13 @@ public class ControllerDispatcher extends HttpServlet {
 
     /**
      * Executes result of controller's action. It may be jsp-view forward, redirect, error, ...
-     * @see com.debalid.mvc.result.ActionResult
-     * @param req Instance of HttpServletRequest that will be used for executing current request.
+     *
+     * @param req  Instance of HttpServletRequest that will be used for executing current request.
      * @param resp Instance of HttpServletResponse that will be used for executing current request.
-     * @param ar Controller's action result to be executed.
+     * @param ar   Controller's action result to be executed.
      * @throws IOException
      * @throws ServletException
+     * @see com.debalid.mvc.result.ActionResult
      */
     protected void finishRequest(HttpServletRequest req, HttpServletResponse resp, ActionResult ar)
             throws IOException, ServletException {
@@ -117,7 +114,7 @@ public class ControllerDispatcher extends HttpServlet {
                 req.getRequestDispatcher(mv.getViewName()).forward(req, resp);
                 return;
             case Redirect:
-                RedirectResult rr = (RedirectResult)ar;
+                RedirectResult rr = (RedirectResult) ar;
                 resp.sendRedirect(rr.getRedirectURL().toString());
                 return;
             case Error: // Process error from any layer (resolve, dispatch, controllers, ...).
@@ -131,8 +128,9 @@ public class ControllerDispatcher extends HttpServlet {
     /**
      * Finds corresponding controller(class) and action (method) based on the resolved request.
      * Definitely should be some reflection magic here! :)
-     * @param req Instance of HttpServletRequest that will be injected in controller.
-     * @param resp Instance of HttpServletResponse that will be injected in controller.
+     *
+     * @param req      Instance of HttpServletRequest that will be injected in controller.
+     * @param resp     Instance of HttpServletResponse that will be injected in controller.
      * @param resolved Object representing current resolved request.
      * @return Result of dispatched action.
      * @throws ServletException
@@ -158,7 +156,7 @@ public class ControllerDispatcher extends HttpServlet {
             return result;
         } catch (Exception e) {
             return ErrorResult.of("Cannot dispatch " + resolved.verb.toString().toUpperCase() + " request " +
-                    "with controller `" + resolved.controller + "` and action `" + resolved.action + "`.",
+                            "with controller `" + resolved.controller + "` and action `" + resolved.action + "`.",
                     e.getMessage(),
                     500);
         }
@@ -172,7 +170,7 @@ public class ControllerDispatcher extends HttpServlet {
             throw new RuntimeException("Can't find proper controllers package!");
         }
         Class controllerClass = Class.forName(controllersPackage + "." + resolved.controller + "Controller");
-        Controller controller = (Controller)controllerClass.newInstance();
+        Controller controller = (Controller) controllerClass.newInstance();
         controller.setRequest(req);
         controller.setResponse(resp);
         controller.setHttpVerb(resolved.verb);
