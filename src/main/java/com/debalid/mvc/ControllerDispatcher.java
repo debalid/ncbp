@@ -6,6 +6,10 @@ import com.debalid.mvc.result.ErrorResult;
 import com.debalid.mvc.result.ModelViewResult;
 import com.debalid.mvc.result.RedirectResult;
 import com.debalid.mvc.util.HttpVerb;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -24,6 +28,11 @@ import java.util.stream.Stream;
 public class ControllerDispatcher extends HttpServlet {
     // uri pattern: /controller/action/?query
     private static final String URI_REGEXP = "/[A-z]*(/|/[A-z]*/?)?(\\?.*)?";
+
+    private static final Logger LOG = LogManager.getLogger(ControllerDispatcher.class);
+    private static final Marker RESOLVE_MARKER = MarkerManager.getMarker("RESOLVE");
+    private static final Marker DISPATCH_MARKER = MarkerManager.getMarker("DISPATCH");
+    private static final Marker EXECUTE_MARKER = MarkerManager.getMarker("EXECUTE");
 
     //default controller for root `/`
     private String defaultController;
@@ -75,12 +84,17 @@ public class ControllerDispatcher extends HttpServlet {
      */
     protected ResolvedRequest resolveRequest(HttpVerb verb, HttpServletRequest req) {
         if (this.defaultController == null) this.defaultController = this.getInitParameter("DefaultController");
-        if (this.defaultController == null) throw new RuntimeException("Default controller must be declared!");
+        if (this.defaultController == null) {
+            String msg = "Default controller must be declared!";
+            LOG.error(RESOLVE_MARKER, msg);
+            throw new RuntimeException(msg);
+        }
 
         String uri = req.getServletPath();
         // pattern: /controller/action/?query
         if (!uri.matches(URI_REGEXP)) {
             //not resolved
+            LOG.error(RESOLVE_MARKER, "Request not resolved: " + uri);
             throw new RuntimeException("Cannot resolve specified uri `" + req.getServletPath() + "`.");
         }
 
@@ -91,7 +105,9 @@ public class ControllerDispatcher extends HttpServlet {
         String action = parts.length > 2 ? parts[2] : "index";
         Map<String, String[]> params = req.getParameterMap();
 
-        return new ResolvedRequest(verb, controller, action, params);
+        ResolvedRequest resolved = new ResolvedRequest(verb, controller, action, params);
+        LOG.debug(RESOLVE_MARKER, "Request resolved as " + resolved.toString());
+        return resolved;
     }
 
     /**
@@ -112,17 +128,18 @@ public class ControllerDispatcher extends HttpServlet {
                 ModelViewResult mv = (ModelViewResult) ar;
                 req.setAttribute(mv.getModelName(), mv.getModel());
                 req.getRequestDispatcher(mv.getViewName()).forward(req, resp);
-                return;
+                break;
             case Redirect:
                 RedirectResult rr = (RedirectResult) ar;
                 resp.sendRedirect(rr.getRedirectURL().toString());
-                return;
+                break;
             case Error: // Process error from any layer (resolve, dispatch, controllers, ...).
             default:
                 // Invokes error with forwarding to error.jsp (see web.xml)
                 req.setAttribute("error", ar);
                 resp.sendError(ar.getCode());
         }
+        LOG.debug(EXECUTE_MARKER, "Action executed with `" + ar.getType() + "` and code " + ar.getCode());
     }
 
     /**
@@ -153,8 +170,11 @@ public class ControllerDispatcher extends HttpServlet {
                 throw new RuntimeException("Action `" + resolved.action +
                         "` of controller `" + resolved.controller +
                         "` returned null");
+
+            LOG.debug(DISPATCH_MARKER, "Successfully dispatched: " + resolved.toString());
             return result;
         } catch (Exception e) {
+            LOG.error(DISPATCH_MARKER, "Exception during dispatching: " + resolved.toString(), e);
             return ErrorResult.of("Cannot dispatch " + resolved.verb.toString().toUpperCase() + " request " +
                             "with controller `" + resolved.controller + "` and action `" + resolved.action + "`.",
                     e.getMessage(),
@@ -207,6 +227,11 @@ public class ControllerDispatcher extends HttpServlet {
             this.controller = controller;
             this.action = action;
             this.params = params;
+        }
+
+        @Override
+        public String toString() {
+            return verb.toString() + " `" + controller + "` controller and `" + action + "` action";
         }
     }
 }
