@@ -14,6 +14,10 @@ import com.debalid.ncbp.repository.impl.JDBCClientSqlRepository;
 import com.debalid.ncbp.repository.impl.JDBCOrderSqlRepository;
 import com.debalid.mvc.util.HttpVerb;
 import com.debalid.ncbp.util.Tuple;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -22,10 +26,7 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Request-scoped representation of orders controller in MVC
@@ -35,6 +36,10 @@ public class OrdersController extends Controller {
     // Repositories of entities. Should be injected.
     private OrderSqlRepository ordersRepo;
     private ClientSqlRepository clientsRepo;
+
+    private static final Logger LOG = LogManager.getLogger(OrdersController.class);
+    private static final Marker ORDERS_MARKER = MarkerManager.getMarker("ORDERS");
+    private static final Marker SQL_ERROR_MARKER = MarkerManager.getMarker("SQL ERROR").setParents(ORDERS_MARKER);
 
     public OrdersController() throws NamingException {
         // TODO: switch to DI
@@ -74,9 +79,11 @@ public class OrdersController extends Controller {
 
         try {
             List<Order> orders = ordersRepo.findByNumberAndClient(numberChunk, clientTitleChunk); // nulls are acceptable
+            LOG.debug(ORDERS_MARKER, "Found orders: " + Arrays.toString(orders.stream().mapToLong(Order::getNumber).toArray()));
             return ModelViewResult.of("orders", orders, "/results.jsp");
 
         } catch (SQLException e) {
+            LOG.error("SQL ERROR", e);
             return ErrorResult.of("SQL error :(", e.getMessage());
         }
     }
@@ -96,12 +103,14 @@ public class OrdersController extends Controller {
         try {
             Optional<Order> order = ordersRepo.find(number);
 
-            if (!order.isPresent())
+            if (!order.isPresent()) {
+                LOG.error(ORDERS_MARKER, "Order with number " + number + " is not found.");
                 return ErrorResult.of("Cannot find order :(", "Cannot find order with number " + number,
                         HttpServletResponse.SC_NOT_FOUND);
+            }
 
             List<Client> availableClients = clientsRepo.findAll();
-
+            LOG.debug(ORDERS_MARKER, "Order returned for editing with number " + order.get().getNumber());
             return ModelViewResult.of(
                     "orderAndAvailableClients",
                     new Tuple<>(order.get(), availableClients),
@@ -109,6 +118,7 @@ public class OrdersController extends Controller {
             );
 
         } catch (SQLException e) {
+            LOG.error(SQL_ERROR_MARKER, "SQL error", e);
             return ErrorResult.of("SQL error :(", e.getMessage());
         }
     }
@@ -124,7 +134,7 @@ public class OrdersController extends Controller {
     public ActionResult create(Map<String, String[]> params) {
         try {
             List<Client> availableClients = clientsRepo.findAll();
-
+            LOG.debug(ORDERS_MARKER, "Order will be created...");
             return ModelViewResult.of(
                     "orderAndAvailableClients",
                     new Tuple<>(null, availableClients),
@@ -132,12 +142,13 @@ public class OrdersController extends Controller {
             );
 
         } catch (SQLException e) {
+            LOG.error(SQL_ERROR_MARKER, "SQL error", e);
             return ErrorResult.of("SQL error :(", e.getMessage());
         }
     }
 
     /**
-     * GET: POST: /orders/save/
+     * POST: /orders/save/
      * BODY: ?number=[number]&clientId=[number|null]&date=[yyyy-MM-dd]&total=[number]
      * Saves order in backend database. It means updating if provided order already exists or creating a new one.
      * Note: params of this method will be mapped to OrderParam object.
@@ -174,10 +185,11 @@ public class OrdersController extends Controller {
             } else order.setClient(null);
 
             ordersRepo.save(order);
-
+            LOG.debug(ORDERS_MARKER, "Order with number " + order.getNumber() + " saved.");
             return RedirectResult.of(this.buildRootURL());
 
         } catch (SQLException e) {
+            LOG.error(ORDERS_MARKER, "SQL error", e);
             return ErrorResult.of("SQL error :(", e.getMessage());
         }
     }
@@ -195,9 +207,14 @@ public class OrdersController extends Controller {
         if (number == null) return ErrorResult.of("Wrong number argument", null, HttpServletResponse.SC_BAD_REQUEST);
 
         try {
-            ordersRepo.delete(number);
+            Optional<Order> order = ordersRepo.delete(number);
+            if (order.isPresent())
+                LOG.debug(ORDERS_MARKER, "Order with number " + order.get().getNumber() + " deleted.");
+            else
+                LOG.debug(ORDERS_MARKER, "Order with number " + order.get().getNumber() + " not found so there is nothing to delete.");
             return RedirectResult.of(this.buildRootURL());
         } catch (SQLException e) {
+            LOG.error(ORDERS_MARKER, "SQL error", e);
             return ErrorResult.of("SQL error :(", e.getMessage());
         }
 

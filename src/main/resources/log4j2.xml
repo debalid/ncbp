@@ -7,9 +7,10 @@
     </Appenders>
     <Loggers>
         <Logger name="com.debalid.mvc.ControllerDispatcher" level="DEBUG">
-            <AppenderRef ref="Console"/>
         </Logger>
-        <Root level="level">
+        <Logger name="com.debalid.ncbp.controllers.OrdersController" level="DEBUG">
+        </Logger>
+        <Root level="ERROR">
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
